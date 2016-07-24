@@ -395,8 +395,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   }
 }
 
-
-
 - (void)viewDidLoad {
   [super viewDidLoad];
   [self setupAVCapture];
@@ -411,7 +409,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   }
 
   tensorflow::Status labels_status =
-      LoadLabels(@"imagenet_comp_graph_label_strings", @"txt", &labels);
+      LoadLabels(@"yolo_labels", @"txt", &labels);
   if (!labels_status.ok()) {
     LOG(FATAL) << "Couldn't load labels: " << labels_status;
   }
