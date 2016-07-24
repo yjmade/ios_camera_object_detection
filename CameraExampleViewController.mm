@@ -41,13 +41,11 @@ static const NSString *AVCaptureStillImageIsCapturingStillImageContext =
     [session setSessionPreset:AVCaptureSessionPreset640x480];
   else
     [session setSessionPreset:AVCaptureSessionPresetPhoto];
-
   AVCaptureDevice *device =
       [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
   AVCaptureDeviceInput *deviceInput =
       [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
   assert(error == nil);
-
   isUsingFrontFacingCamera = NO;
   if ([session canAddInput:deviceInput]) [session addInput:deviceInput];
 
@@ -61,7 +59,6 @@ static const NSString *AVCaptureStillImageIsCapturingStillImageContext =
     [session addOutput:stillImageOutput];
 
   videoDataOutput = [AVCaptureVideoDataOutput new];
-
   NSDictionary *rgbOutputSettings = [NSDictionary
       dictionaryWithObject:[NSNumber numberWithInt:kCMPixelFormat_32BGRA]
                     forKey:(id)kCVPixelBufferPixelFormatTypeKey];
@@ -70,11 +67,9 @@ static const NSString *AVCaptureStillImageIsCapturingStillImageContext =
   videoDataOutputQueue =
       dispatch_queue_create("VideoDataOutputQueue", DISPATCH_QUEUE_SERIAL);
   [videoDataOutput setSampleBufferDelegate:self queue:videoDataOutputQueue];
-
   if ([session canAddOutput:videoDataOutput])
     [session addOutput:videoDataOutput];
   [[videoDataOutput connectionWithMediaType:AVMediaTypeVideo] setEnabled:YES];
-
   previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:session];
   [previewLayer setBackgroundColor:[[UIColor blackColor] CGColor]];
   [previewLayer setVideoGravity:AVLayerVideoGravityResizeAspect];
@@ -82,8 +77,29 @@ static const NSString *AVCaptureStillImageIsCapturingStillImageContext =
   [rootLayer setMasksToBounds:YES];
   [previewLayer setFrame:[rootLayer bounds]];
   [rootLayer addSublayer:previewLayer];
-  [session startRunning];
+    [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted)
+     {
+         if (granted == true)
+         {
+             //[self presentViewController           : picker animated:YES completion:NULL];
+             //Do your stuff
+             NSLog(@"granted");
+         }
+         else
+         {
+             UIAlertView *cameraAlert = [[UIAlertView alloc]
+                                         initWithTitle:@"Warning"
+                                         message:@"No Permission"
+                                         delegate:self
+                                         cancelButtonTitle:@"OK"
+                                         otherButtonTitles:nil,nil];
+             [cameraAlert show];
 
+             NSLog(@"denied");
+         }
+
+     }];
+  [session startRunning];
   [session release];
   if (error) {
     UIAlertView *alertView = [[UIAlertView alloc]
@@ -514,10 +530,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                           width:labelWidth
                          height:labelHeight
                       alignment:kCAAlignmentLeft];
-
-    if ((labelCount == 0) && (value > 0.5f)) {
-      [self speak:[label capitalizedString]];
-    }
 
     labelCount += 1;
     if (labelCount > 4) {

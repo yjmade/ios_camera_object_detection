@@ -28,6 +28,8 @@
 	<string>MainStoryboard_iPhone</string>
 	<key>UIStatusBarHidden</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string></string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
