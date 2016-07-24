@@ -240,6 +240,72 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     NSLog(@"capture output done");
 }
 
+- (void)dealloc {
+  [self teardownAVCapture];
+  [square release];
+  [super dealloc];
+}
+
+// use front/back camera
+- (IBAction)switchCameras:(id)sender {
+  AVCaptureDevicePosition desiredPosition;
+  if (isUsingFrontFacingCamera)
+    desiredPosition = AVCaptureDevicePositionBack;
+  else
+    desiredPosition = AVCaptureDevicePositionFront;
+
+  for (AVCaptureDevice *d in
+       [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo]) {
+    if ([d position] == desiredPosition) {
+      [[previewLayer session] beginConfiguration];
+      AVCaptureDeviceInput *input =
+          [AVCaptureDeviceInput deviceInputWithDevice:d error:nil];
+      for (AVCaptureInput *oldInput in [[previewLayer session] inputs]) {
+        [[previewLayer session] removeInput:oldInput];
+      }
+      [[previewLayer session] addInput:input];
+      [[previewLayer session] commitConfiguration];
+      break;
+    }
+  }
+  isUsingFrontFacingCamera = !isUsingFrontFacingCamera;
+}
+
+- (void)didReceiveMemoryWarning {
+  [super didReceiveMemoryWarning];
+}
+
+- (void)viewDidUnload {
+  [super viewDidUnload];
+  [oldPredictionValues release];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+  [super viewWillAppear:animated];
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+  [super viewDidAppear:animated];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+  [super viewWillDisappear:animated];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+  [super viewDidDisappear:animated];
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:
+    (UIInterfaceOrientation)interfaceOrientation {
+  return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+
+- (BOOL)prefersStatusBarHidden {
+  return YES;
+}
+
+// ===================================================
 - (void)runCNNOnFrame:(CVPixelBufferRef)pixelBuffer {
   assert(pixelBuffer != NULL);
 
@@ -299,8 +365,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   }
 
   if (tf_session.get()) {
-    std::string input_layer = "input";
-    std::string output_layer = "output";
+    std::string input_layer = "x";
+    std::string output_layer = "19_fc";
     std::vector<tensorflow::Tensor> outputs;
       NSLog(@"start run");
     tensorflow::Status run_status = tf_session->Run(
@@ -329,40 +395,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   }
 }
 
-- (void)dealloc {
-  [self teardownAVCapture];
-  [square release];
-  [super dealloc];
-}
 
-// use front/back camera
-- (IBAction)switchCameras:(id)sender {
-  AVCaptureDevicePosition desiredPosition;
-  if (isUsingFrontFacingCamera)
-    desiredPosition = AVCaptureDevicePositionBack;
-  else
-    desiredPosition = AVCaptureDevicePositionFront;
-
-  for (AVCaptureDevice *d in
-       [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo]) {
-    if ([d position] == desiredPosition) {
-      [[previewLayer session] beginConfiguration];
-      AVCaptureDeviceInput *input =
-          [AVCaptureDeviceInput deviceInputWithDevice:d error:nil];
-      for (AVCaptureInput *oldInput in [[previewLayer session] inputs]) {
-        [[previewLayer session] removeInput:oldInput];
-      }
-      [[previewLayer session] addInput:input];
-      [[previewLayer session] commitConfiguration];
-      break;
-    }
-  }
-  isUsingFrontFacingCamera = !isUsingFrontFacingCamera;
-}
-
-- (void)didReceiveMemoryWarning {
-  [super didReceiveMemoryWarning];
-}
 
 - (void)viewDidLoad {
   [super viewDidLoad];
@@ -372,7 +405,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   labelLayers = [[NSMutableArray alloc] init];
   oldPredictionValues = [[NSMutableDictionary alloc] init];
   tensorflow::Status load_status =
-      LoadModel(@"tensorflow_inception_graph", @"pb", &tf_session);
+      LoadModel(@"frozen_tiny", @"pb", &tf_session);
   if (!load_status.ok()) {
     LOG(FATAL) << "Couldn't load model: " << load_status;
   }
@@ -384,35 +417,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   }
 }
 
-- (void)viewDidUnload {
-  [super viewDidUnload];
-  [oldPredictionValues release];
-}
-
-- (void)viewWillAppear:(BOOL)animated {
-  [super viewWillAppear:animated];
-}
-
-- (void)viewDidAppear:(BOOL)animated {
-  [super viewDidAppear:animated];
-}
-
-- (void)viewWillDisappear:(BOOL)animated {
-  [super viewWillDisappear:animated];
-}
-
-- (void)viewDidDisappear:(BOOL)animated {
-  [super viewDidDisappear:animated];
-}
-
-- (BOOL)shouldAutorotateToInterfaceOrientation:
-    (UIInterfaceOrientation)interfaceOrientation {
-  return (interfaceOrientation == UIInterfaceOrientationPortrait);
-}
-
-- (BOOL)prefersStatusBarHidden {
-  return YES;
-}
 
 - (void)setPredictionValues:(NSDictionary *)newValues {
   const float decayValue = 0.75f;
@@ -570,39 +574,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   [[self.view layer] addSublayer:layer];
   [labelLayers addObject:layer];
-}
-
-- (void)setPredictionText:(NSString *)text withDuration:(float)duration {
-  if (duration > 0.0) {
-    CABasicAnimation *colorAnimation =
-        [CABasicAnimation animationWithKeyPath:@"foregroundColor"];
-    colorAnimation.duration = duration;
-    colorAnimation.fillMode = kCAFillModeForwards;
-    colorAnimation.removedOnCompletion = NO;
-    colorAnimation.fromValue = (id)[UIColor darkGrayColor].CGColor;
-    colorAnimation.toValue = (id)[UIColor whiteColor].CGColor;
-    colorAnimation.timingFunction =
-        [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
-    [self.predictionTextLayer addAnimation:colorAnimation
-                                    forKey:@"colorAnimation"];
-  } else {
-    self.predictionTextLayer.foregroundColor = [UIColor whiteColor].CGColor;
-  }
-
-  [self.predictionTextLayer removeFromSuperlayer];
-  [[self.view layer] addSublayer:self.predictionTextLayer];
-  [self.predictionTextLayer setString:text];
-}
-
-- (void)speak:(NSString *)words {
-  if ([synth isSpeaking]) {
-    return;
-  }
-  AVSpeechUtterance *utterance =
-      [AVSpeechUtterance speechUtteranceWithString:words];
-  utterance.voice = [AVSpeechSynthesisVoice voiceWithLanguage:@"en-US"];
-  utterance.rate = 0.75 * AVSpeechUtteranceDefaultSpeechRate;
-  [synth speakUtterance:utterance];
 }
 
 @end

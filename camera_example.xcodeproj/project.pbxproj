@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		31E2E78F1D43942B0076380D /* frozen_tiny.pb in Resources */ = {isa = PBXBuildFile; fileRef = 31E2E78E1D43942B0076380D /* frozen_tiny.pb */; };
 		591D3EC51CFF7F130059011C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 591D3EC41CFF7F120059011C /* AVFoundation.framework */; };
 		591D3ECB1CFF7F5F0059011C /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 591D3ECA1CFF7F5F0059011C /* CoreMedia.framework */; };
 		591D3ECD1CFF7F9F0059011C /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 591D3ECC1CFF7F9F0059011C /* AssetsLibrary.framework */; };
@@ -15,7 +16,6 @@
 		591D3ED51CFF85FD0059011C /* tensorflow_utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = 591D3ED31CFF85FD0059011C /* tensorflow_utils.mm */; };
 		591D3EDA1CFFA83A0059011C /* grace_hopper.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 591D3ED71CFFA83A0059011C /* grace_hopper.jpg */; };
 		591D3EDB1CFFA83A0059011C /* imagenet_comp_graph_label_strings.txt in Resources */ = {isa = PBXBuildFile; fileRef = 591D3ED81CFFA83A0059011C /* imagenet_comp_graph_label_strings.txt */; };
-		591D3EDC1CFFA83A0059011C /* tensorflow_inception_graph.pb in Resources */ = {isa = PBXBuildFile; fileRef = 591D3ED91CFFA83A0059011C /* tensorflow_inception_graph.pb */; };
 		591D3EDF1CFFAD230059011C /* libprotobuf-lite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 591D3EDD1CFFAD230059011C /* libprotobuf-lite.a */; };
 		591D3EE01CFFAD230059011C /* libprotobuf.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 591D3EDE1CFFAD230059011C /* libprotobuf.a */; };
 		592FF8B918ECBD7600C164F8 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 592FF8B818ECBD7600C164F8 /* Foundation.framework */; };
@@ -27,6 +27,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		31E2E78E1D43942B0076380D /* frozen_tiny.pb */ = {isa = PBXFileReference; lastKnownFileType = file; path = frozen_tiny.pb; sourceTree = "<group>"; };
 		591D3EC41CFF7F120059011C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
 		591D3EC61CFF7F370059011C /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk/System/Library/Frameworks/CoreFoundation.framework; sourceTree = DEVELOPER_DIR; };
 		591D3EC81CFF7F500059011C /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk/System/Library/Frameworks/CoreImage.framework; sourceTree = DEVELOPER_DIR; };
@@ -39,7 +40,6 @@
 		591D3ED41CFF85FD0059011C /* tensorflow_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tensorflow_utils.h; sourceTree = SOURCE_ROOT; };
 		591D3ED71CFFA83A0059011C /* grace_hopper.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = grace_hopper.jpg; sourceTree = "<group>"; };
 		591D3ED81CFFA83A0059011C /* imagenet_comp_graph_label_strings.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = imagenet_comp_graph_label_strings.txt; sourceTree = "<group>"; };
-		591D3ED91CFFA83A0059011C /* tensorflow_inception_graph.pb */ = {isa = PBXFileReference; lastKnownFileType = file; path = tensorflow_inception_graph.pb; sourceTree = "<group>"; };
 		591D3EDD1CFFAD230059011C /* libprotobuf-lite.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libprotobuf-lite.a"; path = "../../makefile/gen/protobuf_ios/lib/libprotobuf-lite.a"; sourceTree = "<group>"; };
 		591D3EDE1CFFAD230059011C /* libprotobuf.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libprotobuf.a; path = ../../makefile/gen/protobuf_ios/lib/libprotobuf.a; sourceTree = "<group>"; };
 		592FF8B518ECBD7600C164F8 /* CameraExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CameraExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,7 +78,7 @@
 			children = (
 				591D3ED71CFFA83A0059011C /* grace_hopper.jpg */,
 				591D3ED81CFFA83A0059011C /* imagenet_comp_graph_label_strings.txt */,
-				591D3ED91CFFA83A0059011C /* tensorflow_inception_graph.pb */,
+				31E2E78E1D43942B0076380D /* frozen_tiny.pb */,
 			);
 			path = data;
 			sourceTree = SOURCE_ROOT;
@@ -86,7 +86,7 @@
 		592FF8AA18ECBD3600C164F8 = {
 			isa = PBXGroup;
 			children = (
-				592FF8BE18ECBD7600C164F8 /* CameraExample */,
+				592FF8BE18ECBD7600C164F8 /* CameraDetect */,
 				592FF8B718ECBD7600C164F8 /* Frameworks */,
 				592FF8B618ECBD7600C164F8 /* Products */,
 			);
@@ -117,7 +117,7 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		592FF8BE18ECBD7600C164F8 /* CameraExample */ = {
+		592FF8BE18ECBD7600C164F8 /* CameraDetect */ = {
 			isa = PBXGroup;
 			children = (
 				591D3ED61CFFA83A0059011C /* data */,
@@ -133,7 +133,7 @@
 				591D3ED31CFF85FD0059011C /* tensorflow_utils.mm */,
 				591D3ED41CFF85FD0059011C /* tensorflow_utils.h */,
 			);
-			name = CameraExample;
+			name = CameraDetect;
 			path = SimpleExample;
 			sourceTree = "<group>";
 		};
@@ -201,8 +201,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				31E2E78F1D43942B0076380D /* frozen_tiny.pb in Resources */,
 				591D3EDA1CFFA83A0059011C /* grace_hopper.jpg in Resources */,
-				591D3EDC1CFFA83A0059011C /* tensorflow_inception_graph.pb in Resources */,
 				592FF90D18EDD0DA00C164F8 /* MainStoryboard_iPhone.storyboard in Resources */,
 				591D3EDB1CFFA83A0059011C /* imagenet_comp_graph_label_strings.txt in Resources */,
 			);
@@ -313,7 +313,7 @@
 					"-Xlinker",
 					"-dead_strip",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = net.yjmade.CameraExample;
+				PRODUCT_BUNDLE_IDENTIFIER = net.yjmade.CameraDetect;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -378,7 +378,7 @@
 					"-Xlinker",
 					"-dead_strip",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = net.yjmade.CameraExample;
+				PRODUCT_BUNDLE_IDENTIFIER = net.yjmade.CameraDetect;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";

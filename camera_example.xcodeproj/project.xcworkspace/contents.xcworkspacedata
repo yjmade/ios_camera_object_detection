@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:">
+      location = "self:/Users/yjmade/Documents/code/labs/tensorflow/tf_master.git/tensorflow/contrib/ios_examples/camera_object_detect/camera_example.xcodeproj">
    </FileRef>
 </Workspace>
