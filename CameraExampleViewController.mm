@@ -31,10 +31,31 @@ static const NSString *AVCaptureStillImageIsCapturingStillImageContext =
 @end
 
 @implementation CameraExampleViewController
-
 - (void)setupAVCapture {
   NSError *error = nil;
 
+  [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted)
+   {
+       if (granted == true)
+       {
+           //[self presentViewController           : picker animated:YES completion:NULL];
+           //Do your stuff
+           NSLog(@"granted");
+       }
+       else
+       {
+           UIAlertView *cameraAlert = [[UIAlertView alloc]
+                                       initWithTitle:@"Warning"
+                                       message:@"No Permission"
+                                       delegate:self
+                                       cancelButtonTitle:@"OK"
+                                       otherButtonTitles:nil,nil];
+           [cameraAlert show];
+
+           NSLog(@"denied");
+       }
+
+   }];
   session = [AVCaptureSession new];
   if ([[UIDevice currentDevice] userInterfaceIdiom] ==
       UIUserInterfaceIdiomPhone)
@@ -77,28 +98,6 @@ static const NSString *AVCaptureStillImageIsCapturingStillImageContext =
   [rootLayer setMasksToBounds:YES];
   [previewLayer setFrame:[rootLayer bounds]];
   [rootLayer addSublayer:previewLayer];
-    [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted)
-     {
-         if (granted == true)
-         {
-             //[self presentViewController           : picker animated:YES completion:NULL];
-             //Do your stuff
-             NSLog(@"granted");
-         }
-         else
-         {
-             UIAlertView *cameraAlert = [[UIAlertView alloc]
-                                         initWithTitle:@"Warning"
-                                         message:@"No Permission"
-                                         delegate:self
-                                         cancelButtonTitle:@"OK"
-                                         otherButtonTitles:nil,nil];
-             [cameraAlert show];
-
-             NSLog(@"denied");
-         }
-
-     }];
   [session startRunning];
   [session release];
   if (error) {
@@ -353,8 +352,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   }
   const int image_channels = 4;
 
-  const int wanted_width = 224;
-  const int wanted_height = 224;
+  const int wanted_width = 448;
+  const int wanted_height = 448;
   const int wanted_channels = 3;
   const float input_mean = 117.0f;
   const float input_std = 1.0f;
@@ -375,13 +374,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
           in + (in_y * image_width * image_channels) + (in_x * image_channels);
       float *out_pixel = out_row + (x * wanted_channels);
       for (int c = 0; c < wanted_channels; ++c) {
-        out_pixel[c] = (in_pixel[c] - input_mean) / input_std;
+        out_pixel[c] = (in_pixel[c])/255.*2.-1.;
       }
     }
   }
 
   if (tf_session.get()) {
-    std::string input_layer = "x";
+    std::string input_layer = "Placeholder";
     std::string output_layer = "19_fc";
     std::vector<tensorflow::Tensor> outputs;
       NSLog(@"start run");
@@ -392,8 +391,11 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       LOG(ERROR) << "Running model failed:" << run_status;
     } else {
       tensorflow::Tensor *output = &outputs[0];
-      auto predictions = output->flat<float>();
 
+      auto predictions = output->flat<float>();
+       LOG(INFO) << predictions.size();
+//      LOG(INFO) << shapes.dim_sizes()[0];
+//      LOG(INFO) << shapes.dim_sizes()[1];
       NSMutableDictionary *newValues = [NSMutableDictionary dictionary];
       for (int index = 0; index < predictions.size(); index += 1) {
         const float predictionValue = predictions(index);
@@ -429,6 +431,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   if (!labels_status.ok()) {
     LOG(FATAL) << "Couldn't load labels: " << labels_status;
   }
+
+
 }
 
 
@@ -477,6 +481,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     if (oldPredictionValue > 0.05f) {
       NSDictionary *entry = @{
         @"label" : label,
+
         @"value" : oldPredictionValueObject
       };
       candidateLabels = [candidateLabels arrayByAddingObject:entry];
