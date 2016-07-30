@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		31E2E78F1D43942B0076380D /* frozen_tiny.pb in Resources */ = {isa = PBXBuildFile; fileRef = 31E2E78E1D43942B0076380D /* frozen_tiny.pb */; };
+		314F0E161D4A4D9300069AAE /* frozen_process_no_filter_tiny.pb in Resources */ = {isa = PBXBuildFile; fileRef = 314F0E151D4A4D9300069AAE /* frozen_process_no_filter_tiny.pb */; };
 		591D3EC51CFF7F130059011C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 591D3EC41CFF7F120059011C /* AVFoundation.framework */; };
 		591D3ECB1CFF7F5F0059011C /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 591D3ECA1CFF7F5F0059011C /* CoreMedia.framework */; };
 		591D3ECD1CFF7F9F0059011C /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 591D3ECC1CFF7F9F0059011C /* AssetsLibrary.framework */; };
@@ -27,7 +27,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		31E2E78E1D43942B0076380D /* frozen_tiny.pb */ = {isa = PBXFileReference; lastKnownFileType = file; path = frozen_tiny.pb; sourceTree = "<group>"; };
+		314F0E151D4A4D9300069AAE /* frozen_process_no_filter_tiny.pb */ = {isa = PBXFileReference; lastKnownFileType = file; path = frozen_process_no_filter_tiny.pb; sourceTree = "<group>"; };
 		591D3EC41CFF7F120059011C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
 		591D3EC61CFF7F370059011C /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk/System/Library/Frameworks/CoreFoundation.framework; sourceTree = DEVELOPER_DIR; };
 		591D3EC81CFF7F500059011C /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk/System/Library/Frameworks/CoreImage.framework; sourceTree = DEVELOPER_DIR; };
@@ -77,8 +77,8 @@
 			isa = PBXGroup;
 			children = (
 				591D3ED71CFFA83A0059011C /* grace_hopper.jpg */,
+				314F0E151D4A4D9300069AAE /* frozen_process_no_filter_tiny.pb */,
 				591D3ED81CFFA83A0059011C /* yolo_labels.txt */,
-				31E2E78E1D43942B0076380D /* frozen_tiny.pb */,
 			);
 			path = data;
 			sourceTree = SOURCE_ROOT;
@@ -201,7 +201,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				31E2E78F1D43942B0076380D /* frozen_tiny.pb in Resources */,
+				314F0E161D4A4D9300069AAE /* frozen_process_no_filter_tiny.pb in Resources */,
 				591D3EDA1CFFA83A0059011C /* grace_hopper.jpg in Resources */,
 				592FF90D18EDD0DA00C164F8 /* MainStoryboard_iPhone.storyboard in Resources */,
 				591D3EDB1CFFA83A0059011C /* yolo_labels.txt in Resources */,

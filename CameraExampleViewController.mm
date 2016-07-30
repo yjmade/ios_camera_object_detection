@@ -90,7 +90,10 @@ static const NSString *AVCaptureStillImageIsCapturingStillImageContext =
   [videoDataOutput setSampleBufferDelegate:self queue:videoDataOutputQueue];
   if ([session canAddOutput:videoDataOutput])
     [session addOutput:videoDataOutput];
-  [[videoDataOutput connectionWithMediaType:AVMediaTypeVideo] setEnabled:YES];
+  AVCaptureConnection *connection=[videoDataOutput connectionWithMediaType:AVMediaTypeVideo];
+  connection.videoOrientation = AVCaptureVideoOrientationPortrait;
+  [connection setEnabled:YES];
+
   previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:session];
   [previewLayer setBackgroundColor:[[UIColor blackColor] CGColor]];
   [previewLayer setVideoGravity:AVLayerVideoGravityResizeAspect];
@@ -164,6 +167,7 @@ static const NSString *AVCaptureStillImageIsCapturingStillImageContext =
     result = AVCaptureVideoOrientationLandscapeRight;
   else if (deviceOrientation == UIDeviceOrientationLandscapeRight)
     result = AVCaptureVideoOrientationLandscapeLeft;
+  // NSLog(@"orientation, %ld,%ld",(long)deviceOrientation,(long)result);
   return result;
 }
 
@@ -249,10 +253,8 @@ static const NSString *AVCaptureStillImageIsCapturingStillImageContext =
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection {
-    NSLog(@"capture output");
   CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
   [self runCNNOnFrame:pixelBuffer];
-    NSLog(@"capture output done");
 }
 
 - (void)dealloc {
@@ -325,18 +327,21 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   assert(pixelBuffer != NULL);
 
   OSType sourcePixelFormat = CVPixelBufferGetPixelFormatType(pixelBuffer);
+
   int doReverseChannels;
   if (kCVPixelFormatType_32ARGB == sourcePixelFormat) {
-    doReverseChannels = 1;
-  } else if (kCVPixelFormatType_32BGRA == sourcePixelFormat) {
     doReverseChannels = 0;
+  } else if (kCVPixelFormatType_32BGRA == sourcePixelFormat) {
+    doReverseChannels = 1;
   } else {
     assert(false);  // Unknown source format
   }
 
+
   const int sourceRowBytes = (int)CVPixelBufferGetBytesPerRow(pixelBuffer);
   const int image_width = (int)CVPixelBufferGetWidth(pixelBuffer);
   const int fullHeight = (int)CVPixelBufferGetHeight(pixelBuffer);
+  int image_channels = 4;
   CVPixelBufferLockBaseAddress(pixelBuffer, 0);
   unsigned char *sourceBaseAddr =
       (unsigned char *)(CVPixelBufferGetBaseAddress(pixelBuffer));
@@ -350,65 +355,69 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     const int marginY = ((fullHeight - image_width) / 2);
     sourceStartAddr = (sourceBaseAddr + (marginY * sourceRowBytes));
   }
-  const int image_channels = 4;
-
-  const int wanted_width = 448;
-  const int wanted_height = 448;
+//  NSLog(@"load image %dx%d",fullHeight,image_width);
   const int wanted_channels = 3;
-  const float input_mean = 117.0f;
-  const float input_std = 1.0f;
-  assert(image_channels >= wanted_channels);
+
   tensorflow::Tensor image_tensor(
       tensorflow::DT_FLOAT,
       tensorflow::TensorShape(
-          {1, wanted_height, wanted_width, wanted_channels}));
-  auto image_tensor_mapped = image_tensor.tensor<float, 4>();
+          {image_height, image_width, wanted_channels}));
+  auto image_tensor_mapped = image_tensor.tensor<float, 3>();
   tensorflow::uint8 *in = sourceStartAddr;
   float *out = image_tensor_mapped.data();
-  for (int y = 0; y < wanted_height; ++y) {
-    float *out_row = out + (y * wanted_width * wanted_channels);
-    for (int x = 0; x < wanted_width; ++x) {
-      const int in_x = (y * image_width) / wanted_width;
-      const int in_y = (x * image_height) / wanted_height;
+  for (int y = 0; y < image_height; ++y) {
+    float *out_row = out + (y * image_width * wanted_channels);
+    for (int x = 0; x < image_width; ++x) {
       tensorflow::uint8 *in_pixel =
-          in + (in_y * image_width * image_channels) + (in_x * image_channels);
+          in + (y * image_width * image_channels) + (x * image_channels);
       float *out_pixel = out_row + (x * wanted_channels);
       for (int c = 0; c < wanted_channels; ++c) {
-        out_pixel[c] = (in_pixel[c])/255.*2.-1.;
+        out_pixel[c] = in_pixel[wanted_channels-c-1];
       }
     }
   }
 
   if (tf_session.get()) {
-    std::string input_layer = "Placeholder";
-    std::string output_layer = "19_fc";
     std::vector<tensorflow::Tensor> outputs;
       NSLog(@"start run");
     tensorflow::Status run_status = tf_session->Run(
-        {{input_layer, image_tensor}}, {output_layer}, {}, &outputs);
+        {{"input", image_tensor}}, {"boxes","classes_prob","classes_arg"}, {}, &outputs);
       NSLog(@"stop run");
       if (!run_status.ok()) {
       LOG(ERROR) << "Running model failed:" << run_status;
     } else {
-      tensorflow::Tensor *output = &outputs[0];
+      tensorflow::Tensor *boxes = &outputs[0];
+      tensorflow::Tensor *probs = &outputs[1];
+      tensorflow::Tensor *args = &outputs[2];
+      auto probs_vec=probs->vec<float>();
+      auto args_vec=args->vec<int64_t>();
+      auto boxes_matrix=boxes->matrix<float>();
 
-      auto predictions = output->flat<float>();
-       LOG(INFO) << predictions.size();
-//      LOG(INFO) << shapes.dim_sizes()[0];
-//      LOG(INFO) << shapes.dim_sizes()[1];
-      NSMutableDictionary *newValues = [NSMutableDictionary dictionary];
-      for (int index = 0; index < predictions.size(); index += 1) {
-        const float predictionValue = predictions(index);
-        if (predictionValue > 0.05f) {
-          std::string label = labels[index % predictions.size()];
-          NSString *labelObject = [NSString stringWithCString:label.c_str()];
-          NSNumber *valueObject = [NSNumber numberWithFloat:predictionValue];
-          [newValues setObject:valueObject forKey:labelObject];
+      NSMutableArray *probs_filtered = [NSMutableArray array];
+      NSMutableArray *labels_filtered = [NSMutableArray array];
+      NSMutableArray *boxes_filtered = [NSMutableArray array];
+      for (int index=0;index<probs_vec.size();index++){
+        const float probsValue = probs_vec(index);
+//        LOG(INFO) << probsValue;
+        if(probsValue>0.2f){
+          [probs_filtered addObject:[NSNumber numberWithFloat:probsValue]];
+          std::string label=labels[(tensorflow::StringPiece::size_type)args_vec(index)];
+          [labels_filtered addObject:[NSString stringWithUTF8String:label.c_str()]];
+           [boxes_filtered addObject:[NSArray arrayWithObjects:
+                                      [NSNumber numberWithFloat:boxes_matrix(index,0)],
+                                      [NSNumber numberWithFloat:boxes_matrix(index,1)],
+                                      [NSNumber numberWithFloat:boxes_matrix(index,2)],
+                                      [NSNumber numberWithFloat:boxes_matrix(index,3)], nil
+                                      ]];
         }
       }
-      dispatch_async(dispatch_get_main_queue(), ^(void) {
-        [self setPredictionValues:newValues];
+      dispatch_async(dispatch_get_main_queue(), ^(void){
+          [self setPredictionWithLabels:labels_filtered
+                                  probs:probs_filtered
+                                  boxes:boxes_filtered
+            ];
       });
+       NSLog(@"labels %@ %@",labels_filtered,boxes_filtered);
     }
   }
 }
@@ -420,8 +429,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   synth = [[AVSpeechSynthesizer alloc] init];
   labelLayers = [[NSMutableArray alloc] init];
   oldPredictionValues = [[NSMutableDictionary alloc] init];
+  NSLog(@"Load Model");
   tensorflow::Status load_status =
-      LoadModel(@"frozen_tiny", @"pb", &tf_session);
+      LoadModel(@"frozen_process_no_filter_tiny", @"pb", &tf_session);
   if (!load_status.ok()) {
     LOG(FATAL) << "Couldn't load model: " << load_status;
   }
@@ -435,112 +445,22 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 }
 
+-(void)setPredictionWithLabels:(NSArray *)labels_filtered
+                   probs:(NSArray *)probs_filtered
+                   boxes:(NSArray *)boxes_filtered{
 
-- (void)setPredictionValues:(NSDictionary *)newValues {
-  const float decayValue = 0.75f;
-  const float updateValue = 0.25f;
-  const float minimumThreshold = 0.01f;
+    [self removeAllLabelLayers];
+    CGRect mainScreenBounds = [[UIScreen mainScreen] bounds];
 
-  NSMutableDictionary *decayedPredictionValues =
-      [[NSMutableDictionary alloc] init];
-  for (NSString *label in oldPredictionValues) {
-    NSNumber *oldPredictionValueObject =
-        [oldPredictionValues objectForKey:label];
-    const float oldPredictionValue = [oldPredictionValueObject floatValue];
-    const float decayedPredictionValue = (oldPredictionValue * decayValue);
-    if (decayedPredictionValue > minimumThreshold) {
-      NSNumber *decayedPredictionValueObject =
-          [NSNumber numberWithFloat:decayedPredictionValue];
-      [decayedPredictionValues setObject:decayedPredictionValueObject
-                                  forKey:label];
+    for (int i=0;i<[labels_filtered count];i++){
+      NSString *label=(NSString *)labels_filtered[i];
+      [self addLabelLayerWithText:[NSString stringWithFormat:@"%@ %.2f",label,[probs_filtered[i] floatValue]]
+                          originX:[boxes_filtered[i][0] floatValue]*mainScreenBounds.size.width+mainScreenBounds.origin.x
+                          originY:[boxes_filtered[i][1] floatValue]*mainScreenBounds.size.height+mainScreenBounds.origin.y
+                            width:[boxes_filtered[i][2] floatValue]*mainScreenBounds.size.width
+                           height:[boxes_filtered[i][3] floatValue]*mainScreenBounds.size.height
+                        alignment:kCAAlignmentLeft];
     }
-  }
-  [oldPredictionValues release];
-  oldPredictionValues = decayedPredictionValues;
-
-  for (NSString *label in newValues) {
-    NSNumber *newPredictionValueObject = [newValues objectForKey:label];
-    NSNumber *oldPredictionValueObject =
-        [oldPredictionValues objectForKey:label];
-    if (!oldPredictionValueObject) {
-      oldPredictionValueObject = [NSNumber numberWithFloat:0.0f];
-    }
-    const float newPredictionValue = [newPredictionValueObject floatValue];
-    const float oldPredictionValue = [oldPredictionValueObject floatValue];
-    const float updatedPredictionValue =
-        (oldPredictionValue + (newPredictionValue * updateValue));
-    NSNumber *updatedPredictionValueObject =
-        [NSNumber numberWithFloat:updatedPredictionValue];
-    [oldPredictionValues setObject:updatedPredictionValueObject forKey:label];
-  }
-  NSArray *candidateLabels = [NSMutableArray array];
-  for (NSString *label in oldPredictionValues) {
-    NSNumber *oldPredictionValueObject =
-        [oldPredictionValues objectForKey:label];
-    const float oldPredictionValue = [oldPredictionValueObject floatValue];
-    if (oldPredictionValue > 0.05f) {
-      NSDictionary *entry = @{
-        @"label" : label,
-
-        @"value" : oldPredictionValueObject
-      };
-      candidateLabels = [candidateLabels arrayByAddingObject:entry];
-    }
-  }
-  NSSortDescriptor *sort =
-      [NSSortDescriptor sortDescriptorWithKey:@"value" ascending:NO];
-  NSArray *sortedLabels = [candidateLabels
-      sortedArrayUsingDescriptors:[NSArray arrayWithObject:sort]];
-
-  const float leftMargin = 10.0f;
-  const float topMargin = 10.0f;
-
-  const float valueWidth = 48.0f;
-  const float valueHeight = 26.0f;
-
-  const float labelWidth = 246.0f;
-  const float labelHeight = 26.0f;
-
-  const float labelMarginX = 5.0f;
-  const float labelMarginY = 5.0f;
-
-  [self removeAllLabelLayers];
-
-  int labelCount = 0;
-  for (NSDictionary *entry in sortedLabels) {
-    NSString *label = [entry objectForKey:@"label"];
-    NSNumber *valueObject = [entry objectForKey:@"value"];
-    const float value = [valueObject floatValue];
-
-    const float originY =
-        (topMargin + ((labelHeight + labelMarginY) * labelCount));
-
-    const int valuePercentage = (int)roundf(value * 100.0f);
-
-    const float valueOriginX = leftMargin;
-    NSString *valueText = [NSString stringWithFormat:@"%d%%", valuePercentage];
-
-    [self addLabelLayerWithText:valueText
-                        originX:valueOriginX
-                        originY:originY
-                          width:valueWidth
-                         height:valueHeight
-                      alignment:kCAAlignmentRight];
-
-    const float labelOriginX = (leftMargin + valueWidth + labelMarginX);
-
-    [self addLabelLayerWithText:[label capitalizedString]
-                        originX:labelOriginX
-                        originY:originY
-                          width:labelWidth
-                         height:labelHeight
-                      alignment:kCAAlignmentLeft];
-
-    labelCount += 1;
-    if (labelCount > 4) {
-      break;
-    }
-  }
 }
 
 - (void)removeAllLabelLayers {
@@ -556,21 +476,33 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                         width:(float)width
                        height:(float)height
                     alignment:(NSString *)alignment {
+
+//  NSLog(@"x = %.f,y = %.f, width = %.f, height = %.f",mainScreenBounds.origin.x,mainScreenBounds.origin.y,mainScreenBounds.size.width,mainScreenBounds.size.height);
   NSString *const font = @"Menlo-Regular";
-  const float fontSize = 20.0f;
+  const float fontSize = 8.0f;
 
   const float marginSizeX = 5.0f;
   const float marginSizeY = 2.0f;
 
-  const CGRect backgroundBounds = CGRectMake(originX, originY, width, height);
+  const float realOriginX=originX-(width/2);
+  const float realOriginY=originY-(height/2);
+
+
+  const CGRect backgroundBounds = CGRectMake(
+    ceilf(realOriginX),
+    ceilf(realOriginY),
+    ceilf(width),
+    ceilf(height)
+  );
+  NSLog(@"box x:%f y:%f width:%f height:%f",realOriginX,realOriginY,width,height);
 
   const CGRect textBounds =
-      CGRectMake((originX + marginSizeX), (originY + marginSizeY),
+      CGRectMake((realOriginX + marginSizeX), (realOriginY + marginSizeY),
                  (width - (marginSizeX * 2)), (height - (marginSizeY * 2)));
 
   CATextLayer *background = [CATextLayer layer];
   [background setBackgroundColor:[UIColor blackColor].CGColor];
-  [background setOpacity:0.5f];
+  [background setOpacity:0.1f];
   [background setFrame:backgroundBounds];
   background.cornerRadius = 5.0f;
 
