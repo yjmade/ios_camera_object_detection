@@ -9,7 +9,7 @@ This app is derived from [Google's TensorFlow iOS Camera Example](https://github
 
 - Clone this repository under the `tensorflow/contrib/ios_example` at same level of the offical camera project
 
-- download the graph file and put it into data folder 
+- download the [graph file](https://code.yjmade.net/files/frozen_process_no_filter_tiny.pb.bz2) and decompress it to data folder 
 
 - now you can open the Xcode project file and compile, run it on your real device.
 
