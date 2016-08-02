@@ -2,7 +2,7 @@
 
 This Repository contains all the file to build a YOLO based object detection app except the tensorflow frozon model file, you can download the model file [here](http://www.google.com).
 
-This app is dirivate from [Google's TensorFlow iOS Camera Example](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/contrib/ios_examples/camera). Thanks to the [YOLO_tensorflow](https://github.com/gliese581gg/YOLO_tensorflow) project by gliese581gg, I take the tiny model implementation then merge the proprocessing (resize the image and normalize each pixel) and result interpreting to the tensorflow graph, then froze the checkpoint data from glese581gg with the GraphDef to the pb file, and use it in the app.
+This app is derived from [Google's TensorFlow iOS Camera Example](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/contrib/ios_examples/camera). Thanks to the [YOLO_tensorflow](https://github.com/gliese581gg/YOLO_tensorflow) project by gliese581gg, I took the tiny model implementation and do some like modification, mainly about merge as much as possible operation to the graph of tensorflow, include the proprocessing (resize the image and normalize each pixel) and result interpreting. Then froze the checkpoint data from glese581gg with the GraphDef to the pb file, and use it in the app.
 
 ## Build
 - follow the instruction of the tensorflow buildin ios_example, to comile the protobuf and tensorflow core static library
