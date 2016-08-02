@@ -1,2 +1,5 @@
 syntax:glob
 data/*.pb
+CameraDetect.xcodeproj/project.xcworkspace
+CameraDetect.xcodeproj/xcuserdata
+

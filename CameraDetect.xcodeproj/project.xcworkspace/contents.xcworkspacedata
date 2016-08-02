@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Workspace
-   version = "1.0">
-   <FileRef
-      location = "self:/Users/yjmade/Documents/code/labs/tensorflow/tf_master.git/tensorflow/contrib/ios_examples/camera_object_detect/CameraDetect.xcodeproj">
-   </FileRef>
-</Workspace>
