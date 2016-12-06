@@ -15,7 +15,7 @@ This app is derived from [Google's TensorFlow iOS Camera Example](https://github
 
 ##Disclame
 
-Despite I have already use YOLO tiny model, at runtime it still require at lease 850M memory, so only iPhone 6s or later which get at lease 2GB of memory can make it running, otherwise it will be killed immediately when loading the model.
+Despite I have already use YOLO tiny model, at runtime it still require at least 850M memory, so only iPhone 6s or later which get no smaller than 2GB of memory can make it running, otherwise it will be killed immediately when loading the model.
 
 
 ##Froze the model by yourself
