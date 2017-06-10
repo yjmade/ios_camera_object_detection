@@ -1,11 +1,11 @@
 # Realtime iOS Object Detection with TensorFlow
 
-This Repository contains all the file to build a YOLO based object detection app except the tensorflow frozon model file, you can download the model file [here](https://code.yjmade.net/files/frozen_process_no_filter_tiny.pb.bz2).
+This Repository contains all the file to build a YOLO based object detection app except the tensorflow frozon model file, you can download the model file [here](https://drive.google.com/file/d/0B0wuoauR_vfzdVhFVkpoZklUWTg/view?usp=sharing).
 
 This app is derived from [Google's TensorFlow iOS Camera Example](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/contrib/ios_examples/camera). Thanks to the [YOLO_tensorflow](https://github.com/gliese581gg/YOLO_tensorflow) project by gliese581gg, I took the tiny model implementation and do some like modification, mainly about merge as much as possible operation to the graph of tensorflow, include the proprocessing (resize the image and normalize each pixel) and result interpreting. Then froze the checkpoint data from glese581gg with the GraphDef to the pb file, and use it in the app.
 
 ## Build
-- follow the instruction of the tensorflow buildin ios_example, to comile the protobuf and tensorflow core static library
+- follow the [instruction](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/contrib/makefile) of the tensorflow buildin [ios_example](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/ios), to compile the protobuf and tensorflow core static library
 
 - Clone this repository under the `tensorflow/contrib/ios_example` at same level of the offical camera project
 
